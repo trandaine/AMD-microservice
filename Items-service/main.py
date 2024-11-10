@@ -1,3 +1,4 @@
+# from bson import ObjectId
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
@@ -8,7 +9,7 @@ app = FastAPI()
 
 # MongoDB connection details
 MONGO_URI = "mongodb://localhost:27017/" 
-DATABASE_NAME = "mydatabase"
+DATABASE_NAME = "items_db"
 COLLECTION_NAME = "items"
 
 # Connect to MongoDB
@@ -20,6 +21,7 @@ collection = db[COLLECTION_NAME]
 # Pydantic model for item data
 class Item(BaseModel):
     id: int
+    # id: str = str(ObjectId())
     name: str
     description: str
     price: float
