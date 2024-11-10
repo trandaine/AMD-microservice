@@ -1,4 +1,5 @@
-# from bson import ObjectId
+import os
+from bson import ObjectId
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
@@ -7,25 +8,35 @@ from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
-# MongoDB connection details
-MONGO_URI = "mongodb://localhost:27017/" 
-DATABASE_NAME = "items_db"
-COLLECTION_NAME = "items"
-
-# Connect to MongoDB
-client = MongoClient(MONGO_URI)
-db = client[DATABASE_NAME]
-collection = db[COLLECTION_NAME]
-
 
 # Pydantic model for item data
 class Item(BaseModel):
-    id: int
-    # id: str = str(ObjectId())
+    # id: int
+    id: str = str(ObjectId())
     name: str
     description: str
     price: float
     count: int
+
+# MongoDB connection details
+# Connect to MongoDB
+MONGO_URI = "mongodb://mongodb:27017/"
+COLLECTION_NAME = "items"
+DATABASE_NAME = "items_db"
+@app.on_event("startup")
+async def startup_db_client():
+    try:
+        client = MongoClient(MONGO_URI)
+        client.server_info() 
+        print("Connected to MongoDB successfully!")
+    except Exception as e:
+        print(f"Error connecting to MongoDB: {e}")
+        import traceback
+        traceback.print_exc()
+        
+client = MongoClient(MONGO_URI)
+db = client[DATABASE_NAME]
+collection = db[COLLECTION_NAME]
 
 
 # Create an item
@@ -49,7 +60,7 @@ async def read_items():
 
 # Read a single item by ID
 @app.get("/items/{item_id}", response_model=Item)
-async def read_item(item_id: int):
+async def read_item(item_id: str):
     item_dict = collection.find_one({"id": item_id})
     if item_dict is None:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -58,7 +69,7 @@ async def read_item(item_id: int):
 
 # Update an item
 @app.put("/items/{item_id}", response_model=Item)
-async def update_item(item_id: int, item: Item):
+async def update_item(item_id: str, item: Item):
     item_dict = jsonable_encoder(item)
     result = collection.update_one({"id": item_id}, {"$set": item_dict})
     if result.modified_count == 0:
@@ -68,7 +79,7 @@ async def update_item(item_id: int, item: Item):
 
 # Delete an item
 @app.delete("/items/{item_id}", response_model=Item)
-async def delete_item(item_id: int):
+async def delete_item(item_id: str):
     item_dict = collection.find_one_and_delete({"id": item_id})
     if item_dict is None:
         raise HTTPException(status_code=404, detail="Item not found")
