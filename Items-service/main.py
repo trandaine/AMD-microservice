@@ -11,8 +11,8 @@ app = FastAPI()
 
 # Pydantic model for item data
 class Item(BaseModel):
-    # id: int
-    id: str = str(ObjectId())
+    id: int
+    # id: str = str(ObjectId())
     name: str
     description: str
     price: float
@@ -60,7 +60,7 @@ async def read_items():
 
 # Read a single item by ID
 @app.get("/items/{item_id}", response_model=Item)
-async def read_item(item_id: str):
+async def read_item(item_id: int):
     item_dict = collection.find_one({"id": item_id})
     if item_dict is None:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -69,7 +69,7 @@ async def read_item(item_id: str):
 
 # Update an item
 @app.put("/items/{item_id}", response_model=Item)
-async def update_item(item_id: str, item: Item):
+async def update_item(item_id: int, item: Item):
     item_dict = jsonable_encoder(item)
     result = collection.update_one({"id": item_id}, {"$set": item_dict})
     if result.modified_count == 0:
@@ -79,7 +79,7 @@ async def update_item(item_id: str, item: Item):
 
 # Delete an item
 @app.delete("/items/{item_id}", response_model=Item)
-async def delete_item(item_id: str):
+async def delete_item(item_id: int):
     item_dict = collection.find_one_and_delete({"id": item_id})
     if item_dict is None:
         raise HTTPException(status_code=404, detail="Item not found")

@@ -7,26 +7,35 @@ from bson import ObjectId
 
 app = FastAPI()
 
-# MongoDB connection details
-MONGO_URI = "mongodb://localhost:27017/" 
-DATABASE_NAME = "ChalengesDB"
-COLLECTION_NAME = "challenges"
-
-# Connect to MongoDB
-client = MongoClient(MONGO_URI)
-db = client[DATABASE_NAME]
-collection = db[COLLECTION_NAME]
-
 
 # Pydantic model for challenge data
 class Challenges(BaseModel):
-    # id: int
-    id: str = str(ObjectId())
+    id: int
+    # id: str = str(ObjectId())
     name: str
     challenges: str
     description: str
     quantity: int
 
+# MongoDB connection details
+# Connect to MongoDB
+MONGO_URI = "mongodb://mongodb:27017/"
+COLLECTION_NAME = "challenges"
+DATABASE_NAME = "challenges_db"
+@app.on_event("startup")
+async def startup_db_client():
+    try:
+        client = MongoClient(MONGO_URI)
+        client.server_info() 
+        print("Connected to MongoDB successfully!")
+    except Exception as e:
+        print(f"Error connecting to MongoDB: {e}")
+        import traceback
+        traceback.print_exc()
+        
+client = MongoClient(MONGO_URI)
+db = client[DATABASE_NAME]
+collection = db[COLLECTION_NAME]
 
 # Create an challenge
 @app.post("/challenges/", response_model=Challenges)
@@ -49,7 +58,7 @@ async def read_items():
 
 # Read a single challenge by ID
 @app.get("/challenges/{challenge_id}", response_model=Challenges)
-async def read_item(challenge_id: str):
+async def read_item(challenge_id: int):
     challenge_dict = collection.find_one({"id": challenge_id})
     if challenge_dict is None:
         raise HTTPException(status_code=404, detail="Challenge not found")
@@ -58,7 +67,7 @@ async def read_item(challenge_id: str):
 
 # Update an challenge
 @app.put("/challenges/{challenge_id}", response_model=Challenges)
-async def update_item(challenge_id: str, challenge: Challenges):
+async def update_item(challenge_id: int, challenge: Challenges):
     challenge_dict = jsonable_encoder(challenge)
     result = collection.update_one({"id": challenge_id}, {"$set": challenge_dict})
     if result.modified_count == 0:
@@ -68,7 +77,7 @@ async def update_item(challenge_id: str, challenge: Challenges):
 
 # Delete an challenge
 @app.delete("/challenges/{challenge_id}", response_model=Challenges)
-async def delete_item(challenge_id: str):
+async def delete_item(challenge_id: int):
     challenge_dict = collection.find_one_and_delete({"id": challenge_id})
     if challenge_dict is None:
         raise HTTPException(status_code=404, detail="Challenge not found")
