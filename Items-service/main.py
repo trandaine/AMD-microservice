@@ -6,7 +6,7 @@ from typing import List
 from pymongo import MongoClient
 from fastapi.encoders import jsonable_encoder
 
-app = FastAPI()
+app = FastAPI(title="Items-Service")
 
 
 # Pydantic model for item data

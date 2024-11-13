@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
 
-app = FastAPI()
+app = FastAPI(title="Challenges-Service")
 
 
 # Pydantic model for challenge data
